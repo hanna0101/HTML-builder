@@ -109,21 +109,28 @@ const copyHTML = () => {
       } else {
         files.forEach((file) => {
           const pathToSourceFileComponents = `${sourceComponents}/${file.name}`;
-
           const readStream = fs.createReadStream(
             pathToSourceFileComponents,
             'utf8',
           );
 
           readStream.on('data', (data) => {
-            COMPONENTS[file.name] = data;
+            const componentName = file.name.replace('.html', '');
+            COMPONENTS[componentName] = data;
+
             if (Object.keys(COMPONENTS).length === files.length) {
-              readStreamTemplate.on('data', (data) => {
-                data = data
-                  .replace('{{header}}', COMPONENTS['header.html'])
-                  .replace('{{articles}}', COMPONENTS['articles.html'])
-                  .replace('{{footer}}', COMPONENTS['footer.html']);
-                writeStreamTemplate.write(data);
+              readStreamTemplate.on('data', (templateData) => {
+                let processedData = templateData;
+
+                Object.keys(COMPONENTS).forEach((componentName) => {
+                  const pattern = new RegExp(`{{${componentName}}}`, 'g');
+                  processedData = processedData.replace(
+                    pattern,
+                    COMPONENTS[componentName],
+                  );
+                });
+
+                writeStreamTemplate.write(processedData);
               });
             }
           });
@@ -132,6 +139,7 @@ const copyHTML = () => {
     });
   });
 };
+
 const copyFolderWithAllData = () => {
   copyCSS();
   copyASSETS();

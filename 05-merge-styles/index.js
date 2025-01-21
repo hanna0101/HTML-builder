@@ -13,7 +13,7 @@ const copyFolderWithAllData = () => {
     }
 
     fs.readdir(sourceFolder, { withFileTypes: true }, (error, files) => {
-      const filteredFiles = files.filter((file) => file.name.includes('css'));
+      const filteredFiles = files.filter((file) => file.name.endsWith('.css'));
       if (error) {
         console.log(error.message);
       } else {
@@ -21,7 +21,9 @@ const copyFolderWithAllData = () => {
           let fileName = file.name;
           let pathToSourceFile = `${sourceFolder}/${fileName}`;
           const pathToTargetFile = `${targetFolder}/${BUNDLE_CSS}`;
-          const numberFile = fileName.match(/\d+/)[0];
+
+          const matches = fileName.match(/\d+/);
+          const numberFile = matches ? matches[0] : '0';
 
           const readStream = fs.createReadStream(pathToSourceFile, 'utf8');
           readStream.on('data', (data) => {
@@ -29,7 +31,7 @@ const copyFolderWithAllData = () => {
 
             if (resultData.length === filteredFiles.length) {
               const formattedResultDate = resultData
-                .sort((a, b) => a.numberFile - b.numberFile)
+                .sort((a, b) => Number(a.numberFile) - Number(b.numberFile))
                 .map(({ data }) => data)
                 .join('');
               const writeStream = fs.createWriteStream(
